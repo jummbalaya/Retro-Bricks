@@ -5,7 +5,12 @@ using UnityEngine;
 
 public class DeathZone : MonoBehaviour
 {
-    public MainManager Manager;
+    private MainManager Manager;
+
+    private void Awake()
+    {
+        Manager = FindObjectOfType<MainManager>();
+    }
 
     private void OnCollisionEnter(Collision other)
     {

@@ -1,24 +1,32 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using System.IO;
 
 public class MainManager : MonoBehaviour
 {
+    
+    public string playerName;
+    public string highScorePlayerName;
+    public int highScore;
+
     public Brick BrickPrefab;
     public int LineCount = 6;
     public Rigidbody Ball;
 
     public Text ScoreText;
+    public Text HighScoreText;
     public GameObject GameOverText;
     
     private bool m_Started = false;
-    private int m_Points;
+    public int m_Points;
     
     private bool m_GameOver = false;
 
-    
+   
     // Start is called before the first frame update
     void Start()
     {
@@ -36,6 +44,11 @@ public class MainManager : MonoBehaviour
                 brick.onDestroyed.AddListener(AddPoint);
             }
         }
+        playerName = RecordKeeper.Instance.currentPlayerName;
+        highScorePlayerName = RecordKeeper.Instance.highScorePlayerName;
+        highScore = RecordKeeper.Instance.highScore;
+
+        HighScoreText.text = "Top Score by " + highScorePlayerName + ": " + highScore;
     }
 
     private void Update()
@@ -45,18 +58,25 @@ public class MainManager : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 m_Started = true;
-                float randomDirection = Random.Range(-1.0f, 1.0f);
+                float randomDirection = UnityEngine.Random.Range(-1.0f, 1.0f);
                 Vector3 forceDir = new Vector3(randomDirection, 1, 0);
                 forceDir.Normalize();
 
                 Ball.transform.SetParent(null);
                 Ball.AddForce(forceDir * 2.0f, ForceMode.VelocityChange);
+
+                
             }
         }
         else if (m_GameOver)
         {
             if (Input.GetKeyDown(KeyCode.Space))
             {
+                RecordKeeper.Instance.LoadPlayerData();
+                highScorePlayerName = RecordKeeper.Instance.highScorePlayerName;
+                highScore = RecordKeeper.Instance.highScore;
+                HighScoreText.text = "Top Score by " + highScorePlayerName + ": " + highScore;
+
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
             }
         }
@@ -65,12 +85,19 @@ public class MainManager : MonoBehaviour
     void AddPoint(int point)
     {
         m_Points += point;
-        ScoreText.text = $"Score : {m_Points}";
+        ScoreText.text = playerName + $" score atm: {m_Points}";
     }
 
     public void GameOver()
     {
         m_GameOver = true;
         GameOverText.SetActive(true);
+
+        if (m_Points > highScore)
+        {
+            RecordKeeper.Instance.SavePlayerData(playerName, m_Points);
+        }
     }
+
+
 }
